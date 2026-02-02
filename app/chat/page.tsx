@@ -438,22 +438,25 @@ export default function ChatPage() {
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyDown={(e) => {
-                      // 检测是否是移动设备
-                      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                                       ('ontouchstart' in window) || 
+                      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                                       ('ontouchstart' in window) ||
                                        (navigator.maxTouchPoints > 0)
-                      
+
                       if (e.key === 'Enter') {
-                        // Shift+Enter: 换行（PC和移动端都支持）
+                        // Shift+Enter: 换行（PC 和移动端都支持）
                         if (e.shiftKey) {
-                          return // 允许换行
+                          return // 不阻止默认，允许换行
                         }
-                        // Enter（无Shift）: 发送消息
+                        // Enter（无 Shift）
+                        if (isMobile) {
+                          // 移动端：不阻止默认，允许键盘换行
+                          return
+                        }
+                        // PC 端：阻止默认并发送
                         e.preventDefault()
-                        if (!isMobile && inputText.trim() && !isLoading && speechStatus !== "recording" && speechStatus !== "processing") {
+                        if (inputText.trim() && !isLoading && speechStatus !== "recording" && speechStatus !== "processing") {
                           handleSubmit(e)
                         }
-                        // 移动端：Enter 键不发送消息（已阻止默认行为）
                       }
                     }}
                     placeholder="输入或语音...（Shift+Enter 换行）"

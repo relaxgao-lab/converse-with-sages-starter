@@ -184,84 +184,99 @@ export class WhisperSpeechService {
       audio = new Audio(audioUrl)
       this.currentOpenAIAudio = audio
       
-      // 移动端优化：设置音频属性
+      // 移动端优化：blob URL 不需要 crossOrigin，避免部分机型异常
       audio.preload = 'auto'
-      audio.crossOrigin = 'anonymous'
-      
-      // 添加错误监听用于调试
-      audio.addEventListener('error', (e) => {
-        console.error('Audio element error event:', e, {
-          error: audio.error,
-          code: audio.error?.code,
-          message: audio.error?.message,
-          networkState: audio.networkState,
-          readyState: audio.readyState
-        })
-      })
 
-      // 等待音频加载完成（添加超时）
+      // 等待音频加载完成（10 秒超时）
+      // 原因：部分手机浏览器对 blob URL 不触发 canplay/canplaythrough，只触发 loadeddata 或 readyState 变化
       await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          console.error('Audio load timeout:', {
-            networkState: audio!.networkState,
-            readyState: audio!.readyState,
-            buffered: audio!.buffered.length > 0 ? `${audio!.buffered.start(0)}-${audio!.buffered.end(0)}` : 'none'
-          })
-          reject(new Error('音频加载超时，请检查网络连接或稍后重试'))
-        }, 10000) // 10秒超时
-        
-        // 使用 canplay 事件（移动端更可靠，只需要有足够数据开始播放）
+        let settled = false
+        const settle = () => {
+          if (settled) return
+          settled = true
+          clearTimeout(timeoutId)
+          clearInterval(pollId)
+          audio!.removeEventListener('canplay', onCanPlay)
+          audio!.removeEventListener('canplaythrough', onCanPlayThrough)
+          audio!.removeEventListener('loadeddata', onLoadedData)
+          resolve()
+        }
+
+        const timeoutId = setTimeout(() => {
+          if (!settled) {
+            settled = true
+            clearInterval(pollId)
+            audio!.removeEventListener('canplay', onCanPlay)
+            audio!.removeEventListener('canplaythrough', onCanPlayThrough)
+            audio!.removeEventListener('loadeddata', onLoadedData)
+            console.error('Audio load timeout:', {
+              networkState: audio!.networkState,
+              readyState: audio!.readyState,
+              buffered: audio!.buffered.length > 0 ? `${audio!.buffered.start(0)}-${audio!.buffered.end(0)}` : 'none'
+            })
+            reject(new Error('音频加载超时，请检查网络连接或稍后重试'))
+          }
+        }, 10000)
+
+        // 轮询：部分移动端不触发 canplay，仅更新 readyState，用轮询兜底
+        const pollId = setInterval(() => {
+          if (settled) return
+          // readyState >= 2 (HAVE_CURRENT_DATA) 即可尝试播放
+          if (audio!.readyState >= 2) {
+            console.log('Audio ready (poll), readyState:', audio!.readyState)
+            settle()
+          }
+        }, 200)
+
         const onCanPlay = () => {
-          clearTimeout(timeout)
-          console.log('Audio can play, readyState:', audio!.readyState, 'networkState:', audio!.networkState)
-          audio!.removeEventListener('canplay', onCanPlay)
-          audio!.removeEventListener('canplaythrough', onCanPlayThrough)
-          resolve()
+          console.log('Audio can play, readyState:', audio!.readyState)
+          settle()
         }
-        
-        // 也监听 canplaythrough（如果触发更好）
         const onCanPlayThrough = () => {
-          clearTimeout(timeout)
           console.log('Audio can play through, readyState:', audio!.readyState)
-          audio!.removeEventListener('canplay', onCanPlay)
-          audio!.removeEventListener('canplaythrough', onCanPlayThrough)
-          resolve()
+          settle()
         }
-        
+        const onLoadedData = () => {
+          console.log('Audio loadeddata, readyState:', audio!.readyState)
+          if (audio!.readyState >= 2) settle()
+        }
+
         audio!.addEventListener('canplay', onCanPlay)
         audio!.addEventListener('canplaythrough', onCanPlayThrough)
-        
+        audio!.addEventListener('loadeddata', onLoadedData)
+
         audio!.onerror = (e) => {
-          clearTimeout(timeout)
-          audio!.removeEventListener('canplay', onCanPlay)
-          audio!.removeEventListener('canplaythrough', onCanPlayThrough)
-          console.error('Audio load error:', e, {
-            error: audio!.error,
-            code: audio!.error?.code,
-            message: audio!.error?.message,
-            networkState: audio!.networkState,
-            readyState: audio!.readyState
-          })
-          const errorCode = audio!.error?.code
-          const errorMsg = errorCode === 4 
-            ? '音频格式不支持或文件损坏'
-            : errorCode === 3
-            ? '音频解码失败'
-            : errorCode === 2
-            ? '音频网络错误，请检查网络连接'
-            : errorCode === 1
-            ? '音频加载中断'
-            : `音频加载失败${audio!.error?.message ? ': ' + audio!.error.message : ''}`
-          reject(new Error(errorMsg))
+          if (!settled) {
+            settled = true
+            clearTimeout(timeoutId)
+            clearInterval(pollId)
+            audio!.removeEventListener('canplay', onCanPlay)
+            audio!.removeEventListener('canplaythrough', onCanPlayThrough)
+            audio!.removeEventListener('loadeddata', onLoadedData)
+            console.error('Audio load error:', e, {
+              error: audio!.error,
+              code: audio!.error?.code,
+              message: audio!.error?.message,
+              networkState: audio!.networkState,
+              readyState: audio!.readyState
+            })
+            const errorCode = audio!.error?.code
+            const errorMsg = errorCode === 4
+              ? '音频格式不支持或文件损坏'
+              : errorCode === 3
+                ? '音频解码失败'
+                : errorCode === 2
+                  ? '音频网络错误，请检查网络连接'
+                  : errorCode === 1
+                    ? '音频加载中断'
+                    : `音频加载失败${audio!.error?.message ? ': ' + audio!.error.message : ''}`
+            reject(new Error(errorMsg))
+          }
         }
-        
-        // 如果已经可以播放，立即 resolve
-        if (audio!.readyState >= 3) {
-          clearTimeout(timeout)
-          audio!.removeEventListener('canplay', onCanPlay)
-          audio!.removeEventListener('canplaythrough', onCanPlayThrough)
+
+        if (audio!.readyState >= 2) {
           console.log('Audio already ready, readyState:', audio!.readyState)
-          resolve()
+          settle()
         }
       })
 
