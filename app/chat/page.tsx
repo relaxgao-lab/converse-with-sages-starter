@@ -143,14 +143,11 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, aiMsg])
       setIsLoading(false)
 
-      // 仅 PC 端自动播放回复语音，手机端跳过（避免移动端策略导致无法播放）
-      const isMobile = typeof navigator !== "undefined" && (
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-        ("ontouchstart" in window) ||
-        (navigator.maxTouchPoints > 0)
-      )
+      // 仅 PC 端自动播放回复语音，手机/平板跳过（按 UA 判断，不按触摸屏，避免触摸屏 PC 被误判）
+      const isMobileUA = typeof navigator !== "undefined" &&
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
       const speakMatch = data.content?.match(/\[SPEAK\]([\s\S]*?)\[\/SPEAK\]/)
-      if (!isMobile && isSpeechEnabledRef.current && speakMatch?.[1]) {
+      if (!isMobileUA && isSpeechEnabledRef.current && speakMatch?.[1]) {
         try {
           await whisperSpeechService.speak(speakMatch[1].trim())
         } catch (speakErr: any) {
@@ -198,14 +195,11 @@ export default function ChatPage() {
       .then((data) => {
         const aiMsg: Message = { role: "assistant", content: data.content || "(No response)" }
         setMessages([aiMsg])
-        // 仅 PC 端自动播放，手机端跳过
-        const isMobile = typeof navigator !== "undefined" && (
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-          ("ontouchstart" in window) ||
-          (navigator.maxTouchPoints > 0)
-        )
+        // 仅 PC 端自动播放，手机/平板跳过（按 UA 判断）
+        const isMobileUA = typeof navigator !== "undefined" &&
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
         const speakMatch = data.content?.match(/\[SPEAK\]([\s\S]*?)\[\/SPEAK\]/)
-        if (!isMobile && isSpeechEnabledRef.current && speakMatch?.[1]) {
+        if (!isMobileUA && isSpeechEnabledRef.current && speakMatch?.[1]) {
           whisperSpeechService.speak(speakMatch[1].trim())
         }
       })

@@ -274,7 +274,10 @@ export default function HomePage() {
                   value={scenario}
                   onChange={(e) => setScenario(e.target.value)}
                   placeholder="如：佛陀、老子、孔子..."
-                  onKeyDown={(e) => e.key === "Enter" && handleStartScenario()}
+                  onKeyDown={(e) => {
+                  if (e.key !== "Enter") return
+                  if (scenario.trim()) handleStartScenario()
+                }}
                   disabled={isLoading}
                   className="rounded-lg border-gray-200 bg-white text-sm h-9 focus-visible:ring-blue-500"
                 />
