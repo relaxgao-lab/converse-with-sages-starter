@@ -179,24 +179,81 @@ export class WhisperSpeechService {
       audioUrl = URL.createObjectURL(blob)
       audio = new Audio(audioUrl)
       this.currentOpenAIAudio = audio
+      
+      // 移动端优化：设置音频属性
+      audio.preload = 'auto'
+      audio.crossOrigin = 'anonymous'
+      
+      // 添加错误监听用于调试
+      audio.addEventListener('error', (e) => {
+        console.error('Audio element error event:', e, {
+          error: audio.error,
+          code: audio.error?.code,
+          message: audio.error?.message,
+          networkState: audio.networkState,
+          readyState: audio.readyState
+        })
+      })
 
-      // 等待音频加载完成
+      // 等待音频加载完成（添加超时）
       await new Promise<void>((resolve, reject) => {
-        audio!.oncanplaythrough = () => resolve()
-        audio!.onerror = () => reject(new Error('音频加载失败'))
+        const timeout = setTimeout(() => {
+          reject(new Error('音频加载超时（10秒），请检查网络连接'))
+        }, 10000) // 10秒超时
+        
+        audio!.oncanplaythrough = () => {
+          clearTimeout(timeout)
+          console.log('Audio can play through, readyState:', audio!.readyState)
+          resolve()
+        }
+        audio!.onerror = (e) => {
+          clearTimeout(timeout)
+          console.error('Audio load error:', e, {
+            error: audio!.error,
+            code: audio!.error?.code,
+            message: audio!.error?.message,
+            networkState: audio!.networkState,
+            readyState: audio!.readyState
+          })
+          const errorCode = audio!.error?.code
+          const errorMsg = errorCode === 4 
+            ? '音频格式不支持或文件损坏'
+            : errorCode === 3
+            ? '音频解码失败'
+            : errorCode === 2
+            ? '音频网络错误，请检查网络连接'
+            : errorCode === 1
+            ? '音频加载中断'
+            : `音频加载失败${audio!.error?.message ? ': ' + audio!.error.message : ''}`
+          reject(new Error(errorMsg))
+        }
         // 如果已经可以播放，立即 resolve
-        if (audio!.readyState >= 3) resolve()
+        if (audio!.readyState >= 3) {
+          clearTimeout(timeout)
+          console.log('Audio already ready, readyState:', audio!.readyState)
+          resolve()
+        }
       })
 
       // 尝试播放音频
       try {
-        await audio.play()
+        console.log('Attempting to play audio, readyState:', audio.readyState)
+        const playPromise = audio.play()
+        if (playPromise !== undefined) {
+          await playPromise
+          console.log('Audio play promise resolved')
+        }
       } catch (playError: any) {
-        // 如果播放被阻止（例如浏览器自动播放策略），静默失败
+        console.error('Audio play error:', {
+          name: playError.name,
+          message: playError.message,
+          code: playError.code
+        })
+        // 如果播放被阻止（例如浏览器自动播放策略）
         if (playError.name === 'NotAllowedError' || playError.name === 'NotSupportedError') {
           if (audioUrl) URL.revokeObjectURL(audioUrl)
           this.currentOpenAIAudio = null
-          throw new Error('音频播放被阻止，请点击页面后重试')
+          throw new Error('音频播放被阻止，请点击页面任意位置后重试')
         }
         throw playError
       }
