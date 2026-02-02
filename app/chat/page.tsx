@@ -361,7 +361,7 @@ export default function ChatPage() {
                 {messages.map((msg, i) => (
                   <div
                     key={i}
-                    className={`group relative flex gap-4 py-6 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+                    className={`group relative flex gap-4 py-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                   >
                     <div
                       className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
@@ -385,7 +385,7 @@ export default function ChatPage() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <div className="prose prose-gray max-w-none text-[15px] leading-[1.75] prose-p:my-3 prose-p:leading-relaxed">
+                          <div className="prose prose-gray max-w-none text-[15px] leading-[1.75] prose-p:my-2 prose-p:leading-relaxed">
                             {extractSpeakContent(msg.content)}
                           </div>
                           {i === messages.length - 1 && (
@@ -410,7 +410,7 @@ export default function ChatPage() {
                   </div>
                 ))}
                 {isLoading && (
-                  <div className="group relative flex gap-4 py-6">
+                  <div className="group relative flex gap-4 py-3">
                     <div className="shrink-0 w-8 h-8 rounded-full bg-[#19c37d] flex items-center justify-center text-xs font-medium text-white animate-status-pulse">
                       师
                     </div>
@@ -459,7 +459,7 @@ export default function ChatPage() {
                         }
                       }
                     }}
-                    placeholder="输入或语音...（Shift+Enter 换行）"
+                    placeholder="输入或语音..."
                     disabled={isLoading || speechStatus === "recording" || speechStatus === "processing"}
                     className="flex-1 border-0 min-h-[44px] sm:min-h-[52px] max-h-[120px] py-3 px-4 text-base sm:text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500 resize-none overflow-hidden"
                     rows={1}
