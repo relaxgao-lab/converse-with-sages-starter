@@ -99,6 +99,26 @@ export default function HomePage() {
   }, [messages])
 
   useEffect(() => {
+    let touchStartY = 0
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY
+    }
+    const handleTouchMove = (e: TouchEvent) => {
+      const touchY = e.touches[0].clientY
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      if (touchY > touchStartY && scrollTop === 0) {
+        e.preventDefault()
+      }
+    }
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchmove', handleTouchMove)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!sceneMeta && bottomStripRef.current && !bottomStripPaused) {
       const el = bottomStripRef.current
       const step = 1
@@ -475,7 +495,7 @@ export default function HomePage() {
               </span>
             </div>
             <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+              <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-[max(6rem,calc(6rem+env(safe-area-inset-bottom)))]">
                 {messages.map((msg, i) => (
                   <div
                     key={i}
@@ -548,7 +568,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="w-full border-t border-gray-200 bg-white p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="sticky bottom-0 w-full border-t border-gray-200 bg-white p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-10 shadow-[0_-2px_8px_rgba(0,0,0,0.05)]">
               <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
                 <div className="flex items-end gap-1 rounded-2xl bg-white border border-gray-300 shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_2px_4px_rgba(0,0,0,0.05)] p-2 focus-within:border-gray-400 focus-within:shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.08)] transition-all">
                   <Input

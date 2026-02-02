@@ -54,11 +54,15 @@
   * { @apply border-border; }
   html {
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+    overscroll-behavior: none;
   }
   body {
     @apply bg-background text-foreground;
     font-family: "LXGW WenKai", sans-serif;
     padding-bottom: env(safe-area-inset-bottom, 0);
+    overscroll-behavior-y: none;
+    overscroll-behavior: none;
   }
   pre,
   code {
