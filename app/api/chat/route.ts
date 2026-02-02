@@ -40,15 +40,10 @@ Follow these rules STRICTLY:
 4. Keep responses concise and natural for a real conversation.
 5. You may respond in Chinese or Classical Chinese as appropriate for the sage's voice.
 6. Wrap your main response in [SPEAK]...[/SPEAK] tags for TTS.
-7. After the main response, provide exactly 2 suggested replies for the user in the format:
-   You can say:
-   1. "[first suggestion]"
-   2. "[second suggestion]"
-8. Provide a translation if needed. Format: TRANSLATION:\n[translation]
-9. NEVER break character or mention being an AI.`;
+7. NEVER break character or mention being an AI.`;
 
     if (isInitialTurn) {
-      systemPrompt += `\n10. Initiate the conversation naturally based on your role and the context.`;
+      systemPrompt += `\n8. Initiate the conversation naturally based on your role and the context.`;
     }
 
     const fullMessages: Message[] = [
