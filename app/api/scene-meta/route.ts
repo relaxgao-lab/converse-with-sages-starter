@@ -12,7 +12,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing or invalid scenario' }, { status: 400 })
     }
 
-    const prompt = `请根据我想对话的古代人物或场景"${scenario}"，推理出一个JSON，内容包括：ai要扮演的角色、用户身份、对话上下文。只返回JSON，不要多余解释。例如：{ "aiRole": "老子", "userRole": "求道者", "context": "在函谷关，求道者向老子请教道德经的智慧。" }`
+    const prompt = `请根据我想对话的古代圣人"${scenario}"，生成一个JSON，固定规则：
+1. aiRole：古代圣人的名字（从"${scenario}"中提取，如"老子"、"孔子"、"佛陀"等）
+2. userRole：固定为"学生"（现代学生）
+3. context：描述超时空对话场景，现代学生穿越时空向古代圣人请教，例如："一位现代学生通过时空之门，来到古代，向${scenario.split(/[，,]/)[0]?.trim() || scenario}请教智慧与人生之道。"
+
+只返回JSON，不要多余解释。格式：{ "aiRole": "圣人名字", "userRole": "学生", "context": "超时空对话场景描述" }`
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',

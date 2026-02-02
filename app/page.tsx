@@ -19,22 +19,25 @@ interface SceneMeta {
   scenario: string
 }
 
+// 道教人物，按年代从早到晚
 const taoistSages = [
   { label: "老子", value: "老子，道家创始人，著《道德经》", intro: "道家创始人，著《道德经》" },
-  { label: "庄子", value: "庄子，道家代表人物", intro: "道家代表人物" },
-  { label: "列子", value: "列子，道家代表人物，御风而行", intro: "道家代表人物，御风而行" },
-  { label: "文子", value: "文子，道家，老子弟子，通玄真经", intro: "道家，老子弟子，通玄真经" },
   { label: "关尹子", value: "关尹子，道家，关令尹喜，道德经传人", intro: "道家，关令尹喜，道德经传人" },
+  { label: "文子", value: "文子，道家，老子弟子，通玄真经", intro: "道家，老子弟子，通玄真经" },
+  { label: "列子", value: "列子，道家代表人物，御风而行", intro: "道家代表人物，御风而行" },
+  { label: "庄子", value: "庄子，道家代表人物", intro: "道家代表人物" },
 ]
 
+// 佛教人物，按年代从早到晚
 const buddhistSages = [
   { label: "佛陀", value: "佛陀，佛教创始人，觉悟者，讲四谛与慈悲", intro: "佛教创始人，觉悟者，讲四谛与慈悲" },
-  { label: "慧能", value: "慧能，禅宗六祖，顿悟见性", intro: "禅宗六祖，顿悟见性" },
-  { label: "玄奘", value: "玄奘，唐代高僧，西行取经、唯识宗", intro: "唐代高僧，西行取经、唯识宗" },
-  { label: "达摩", value: "达摩，禅宗初祖，东渡传法、面壁九年", intro: "禅宗初祖，东渡传法、面壁九年" },
   { label: "龙树", value: "龙树，印度大乘论师，中观空性", intro: "印度大乘论师，中观空性" },
+  { label: "达摩", value: "达摩，禅宗初祖，东渡传法、面壁九年", intro: "禅宗初祖，东渡传法、面壁九年" },
+  { label: "玄奘", value: "玄奘，唐代高僧，西行取经、唯识宗", intro: "唐代高僧，西行取经、唯识宗" },
+  { label: "慧能", value: "慧能，禅宗六祖，顿悟见性", intro: "禅宗六祖，顿悟见性" },
 ]
 
+// 西方圣人，按年代从早到晚
 const westernSages = [
   { label: "苏格拉底", value: "苏格拉底，古希腊哲学家，主张认识你自己", intro: "古希腊哲学家，主张认识你自己" },
   { label: "柏拉图", value: "柏拉图，古希腊哲学家，理念论与理想国", intro: "古希腊哲学家，理念论与理想国" },
@@ -43,19 +46,20 @@ const westernSages = [
   { label: "康德", value: "康德，德国古典哲学奠基人，批判哲学", intro: "德国古典哲学奠基人，批判哲学" },
 ]
 
+// 诸子百家等，按年代从早到晚
 const otherSages = [
+  { label: "管子", value: "管子，齐相，富国强兵之道", intro: "齐相，富国强兵之道" },
+  { label: "孙子", value: "孙子，兵家鼻祖，《孙子兵法》", intro: "兵家鼻祖，《孙子兵法》" },
   { label: "孔子", value: "孔子，儒家创始人，提倡仁礼", intro: "儒家创始人，提倡仁礼" },
   { label: "墨子", value: "墨子，墨家创始人，主张兼爱非攻", intro: "墨家创始人，主张兼爱非攻" },
   { label: "孟子", value: "孟子，儒家代表，主张性善论", intro: "儒家代表，主张性善论" },
-  { label: "王阳明", value: "王阳明，心学创始人，致良知、知行合一", intro: "心学创始人，致良知、知行合一" },
   { label: "荀子", value: "荀子，儒家代表，性恶论与礼法", intro: "儒家代表，性恶论与礼法" },
   { label: "韩非", value: "韩非，法家集大成者，法术势", intro: "法家集大成者，法术势" },
-  { label: "管子", value: "管子，齐相，富国强兵之道", intro: "齐相，富国强兵之道" },
-  { label: "孙子", value: "孙子，兵家鼻祖，《孙子兵法》", intro: "兵家鼻祖，《孙子兵法》" },
   { label: "鬼谷子", value: "鬼谷子，纵横家祖师，谋略与辩术", intro: "纵横家祖师，谋略与辩术" },
   { label: "诸葛亮", value: "诸葛亮，蜀汉丞相，智慧与忠义", intro: "蜀汉丞相，智慧与忠义" },
   { label: "李白", value: "李白，诗仙，浪漫与自由", intro: "诗仙，浪漫与自由" },
   { label: "杜甫", value: "杜甫，诗圣，沉郁与仁心", intro: "诗圣，沉郁与仁心" },
+  { label: "王阳明", value: "王阳明，心学创始人，致良知、知行合一", intro: "心学创始人，致良知、知行合一" },
 ]
 
 const bottomSages = [...westernSages, ...otherSages]
@@ -240,8 +244,17 @@ export default function HomePage() {
 
       {!sceneMeta ? (
         <div className="flex-1 flex flex-col min-h-screen bg-gradient-to-b from-stone-50/80 to-stone-100/60">
-          {/* 上方弹性占位（略小，整体内容偏上） */}
-          <div className="flex-[0.5] min-h-0" aria-hidden />
+          {/* 上方内容区域 */}
+          <div className="flex-[0.5] min-h-0 flex items-end justify-center pb-4 md:pb-6">
+            <div className="text-center px-4 max-w-2xl">
+              <p className="text-sm sm:text-base text-amber-700/80 font-medium mb-2">
+                跨越时空，与智者对话
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500/80 leading-relaxed">
+                点击下方人物卡片快速开始，或输入任意智者姓名开启对话
+              </p>
+            </div>
+          </div>
 
           {/* 主行：左道教 | 中标题+输入 | 右佛教 */}
           <div className="shrink-0 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 md:gap-20 w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-8 items-start">
@@ -354,9 +367,9 @@ export default function HomePage() {
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
           <div className="bg-card border rounded-lg p-4 sm:p-6 max-w-lg w-full mb-6 mx-3">
             <h2 className="text-xl font-bold mb-4">场景设定</h2>
-            <p><strong>AI 角色：</strong>{sceneMeta.aiRole}</p>
-            <p><strong>你的角色：</strong>{sceneMeta.userRole}</p>
-            <p><strong>上下文：</strong>{sceneMeta.context}</p>
+            <p className="mb-2"><strong>圣人：</strong>{sceneMeta.aiRole}</p>
+            <p className="mb-2"><strong>你的身份：</strong>学生</p>
+            <p className="text-sm text-muted-foreground leading-relaxed"><strong>对话场景：</strong>{sceneMeta.context}</p>
           </div>
           <div className="flex gap-4">
             <Button onClick={handleConfirmScene} disabled={isLoading}>确认开始</Button>
@@ -386,9 +399,35 @@ export default function HomePage() {
                 <span className="text-sm">+ 新对话</span>
               </Button>
             </div>
-            <div className="flex-1 min-h-0 px-2">
-              <div className="rounded-lg px-3 py-2 text-sm font-medium text-white truncate" title={sceneMeta.scenario}>
-                {sceneMeta.scenario}
+            <div className="flex-1 min-h-0 px-3 py-2 overflow-y-auto">
+              <div className="rounded-xl bg-gradient-to-br from-amber-900/30 to-orange-900/20 border border-amber-700/30 p-4 shadow-lg">
+                {(() => {
+                  const parts = sceneMeta.scenario.split(/[，,]/);
+                  const name = parts[0]?.trim() || sceneMeta.scenario;
+                  const intro = parts.slice(1).join('，').trim();
+                  return (
+                    <>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-200 to-orange-200 flex items-center justify-center text-lg font-medium text-amber-900 shadow-inner shrink-0">
+                          {name.slice(0, 1)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-base font-bold text-white mb-0.5 truncate">{name}</h3>
+                          {intro && (
+                            <p className="text-xs text-amber-200/80 line-clamp-2 leading-relaxed">{intro}</p>
+                          )}
+                        </div>
+                      </div>
+                      {(sceneMeta.context || intro) && (
+                        <div className="pt-3 border-t border-amber-700/30">
+                          <p className="text-xs text-amber-300/90 leading-relaxed">
+                            {sceneMeta.context || intro}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
             <div className="p-3 space-y-1 border-t border-white/10">
@@ -409,9 +448,6 @@ export default function HomePage() {
                 {isSpeechEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                 {isSpeechEnabled ? "语音开" : "语音关"}
               </button>
-              {isSpeechEnabled && (
-                <p className="px-3 py-1.5 text-xs text-amber-400/90">回复将自动朗读</p>
-              )}
             </div>
           </aside>
 
