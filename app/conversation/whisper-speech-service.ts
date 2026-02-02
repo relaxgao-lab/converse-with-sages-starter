@@ -82,7 +82,7 @@ export class WhisperSpeechService {
   async speak(text: string): Promise<void> {
     if (this.status === 'speaking') await this.stopSpeaking()
     this.cleanupCurrentAudio()
-    this.setStatus('speaking')
+    // 状态将在音频真正开始播放后设置
 
     try {
       if (this.config.ttsProvider === 'system') {
@@ -138,6 +138,10 @@ export class WhisperSpeechService {
         }
       }, 60000) // 60秒超时
       
+      utterance.onstart = () => {
+        // 语音真正开始播放时才设置状态
+        this.setStatus('speaking')
+      }
       utterance.onend = () => { 
         clearTimeout(timeout)
         cleanup()
@@ -198,16 +202,39 @@ export class WhisperSpeechService {
       // 等待音频加载完成（添加超时）
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('音频加载超时（10秒），请检查网络连接'))
+          console.error('Audio load timeout:', {
+            networkState: audio!.networkState,
+            readyState: audio!.readyState,
+            buffered: audio!.buffered.length > 0 ? `${audio!.buffered.start(0)}-${audio!.buffered.end(0)}` : 'none'
+          })
+          reject(new Error('音频加载超时，请检查网络连接或稍后重试'))
         }, 10000) // 10秒超时
         
-        audio!.oncanplaythrough = () => {
+        // 使用 canplay 事件（移动端更可靠，只需要有足够数据开始播放）
+        const onCanPlay = () => {
           clearTimeout(timeout)
-          console.log('Audio can play through, readyState:', audio!.readyState)
+          console.log('Audio can play, readyState:', audio!.readyState, 'networkState:', audio!.networkState)
+          audio!.removeEventListener('canplay', onCanPlay)
+          audio!.removeEventListener('canplaythrough', onCanPlayThrough)
           resolve()
         }
+        
+        // 也监听 canplaythrough（如果触发更好）
+        const onCanPlayThrough = () => {
+          clearTimeout(timeout)
+          console.log('Audio can play through, readyState:', audio!.readyState)
+          audio!.removeEventListener('canplay', onCanPlay)
+          audio!.removeEventListener('canplaythrough', onCanPlayThrough)
+          resolve()
+        }
+        
+        audio!.addEventListener('canplay', onCanPlay)
+        audio!.addEventListener('canplaythrough', onCanPlayThrough)
+        
         audio!.onerror = (e) => {
           clearTimeout(timeout)
+          audio!.removeEventListener('canplay', onCanPlay)
+          audio!.removeEventListener('canplaythrough', onCanPlayThrough)
           console.error('Audio load error:', e, {
             error: audio!.error,
             code: audio!.error?.code,
@@ -227,9 +254,12 @@ export class WhisperSpeechService {
             : `音频加载失败${audio!.error?.message ? ': ' + audio!.error.message : ''}`
           reject(new Error(errorMsg))
         }
+        
         // 如果已经可以播放，立即 resolve
         if (audio!.readyState >= 3) {
           clearTimeout(timeout)
+          audio!.removeEventListener('canplay', onCanPlay)
+          audio!.removeEventListener('canplaythrough', onCanPlayThrough)
           console.log('Audio already ready, readyState:', audio!.readyState)
           resolve()
         }
@@ -242,6 +272,11 @@ export class WhisperSpeechService {
         if (playPromise !== undefined) {
           await playPromise
           console.log('Audio play promise resolved')
+          // 音频真正开始播放后才设置状态
+          this.setStatus('speaking')
+        } else {
+          // 如果没有返回 Promise，也设置状态
+          this.setStatus('speaking')
         }
       } catch (playError: any) {
         console.error('Audio play error:', {
@@ -310,6 +345,7 @@ export class WhisperSpeechService {
 
   private setStatus(s: SpeechStatus): void {
     if (this.status === s) return
+    console.log(`[WhisperSpeechService] Status change: ${this.status} -> ${s}`)
     this.status = s
     this.config.onStatusChange?.(s)
   }

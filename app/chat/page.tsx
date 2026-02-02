@@ -68,7 +68,10 @@ export default function ChatPage() {
   useEffect(() => {
     whisperSpeechService.updateConfig({
       ttsProvider: TTS_PROVIDER,
-      onStatusChange: (s) => setSpeechStatus(s),
+      onStatusChange: (s) => {
+        console.log(`[ChatPage] Speech status changed to: ${s}`)
+        setSpeechStatus(s)
+      },
       onError: (err) => {
         setErrorMessage(err)
         setSpeechStatus("idle")
