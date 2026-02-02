@@ -120,8 +120,42 @@ export class WhisperSpeechService {
     utterance.volume = 1.0
 
     await new Promise<void>((resolve, reject) => {
-      utterance.onend = () => { this.setStatus('idle'); this.config.onSpeechEnd?.(); resolve() }
-      utterance.onerror = (e) => { this.setStatus('idle'); reject(new Error(String((e as any).error))) }
+      let resolved = false
+      const cleanup = () => {
+        if (!resolved) {
+          resolved = true
+          this.currentSystemUtterance = null
+          this.setStatus('idle')
+        }
+      }
+      
+      // 添加超时保护
+      const timeout = setTimeout(() => {
+        if (!resolved) {
+          window.speechSynthesis.cancel()
+          cleanup()
+          reject(new Error('语音播放超时'))
+        }
+      }, 60000) // 60秒超时
+      
+      utterance.onend = () => { 
+        clearTimeout(timeout)
+        cleanup()
+        this.config.onSpeechEnd?.()
+        resolve() 
+      }
+      utterance.onerror = (e) => { 
+        clearTimeout(timeout)
+        cleanup()
+        const errorType = (e as any).error || 'unknown'
+        const errorMsg = errorType === 'not-allowed' 
+          ? '语音播放被阻止，请检查浏览器权限设置'
+          : errorType === 'synthesis-failed'
+          ? '语音合成失败'
+          : '语音播放失败'
+        reject(new Error(errorMsg))
+      }
+      
       window.speechSynthesis.speak(utterance)
     })
     this.currentSystemUtterance = null
@@ -137,29 +171,70 @@ export class WhisperSpeechService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, model: 'tts-1', voice: 'alloy', response_format: 'mp3' }),
       })
-      if (!res.ok) throw new Error(await res.text())
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(errorText || 'Failed to generate audio')
+      }
       const blob = await res.blob()
       audioUrl = URL.createObjectURL(blob)
       audio = new Audio(audioUrl)
       this.currentOpenAIAudio = audio
-      await audio.play()
+
+      // 等待音频加载完成
+      await new Promise<void>((resolve, reject) => {
+        audio!.oncanplaythrough = () => resolve()
+        audio!.onerror = () => reject(new Error('音频加载失败'))
+        // 如果已经可以播放，立即 resolve
+        if (audio!.readyState >= 3) resolve()
+      })
+
+      // 尝试播放音频
+      try {
+        await audio.play()
+      } catch (playError: any) {
+        // 如果播放被阻止（例如浏览器自动播放策略），静默失败
+        if (playError.name === 'NotAllowedError' || playError.name === 'NotSupportedError') {
+          if (audioUrl) URL.revokeObjectURL(audioUrl)
+          this.currentOpenAIAudio = null
+          throw new Error('音频播放被阻止，请点击页面后重试')
+        }
+        throw playError
+      }
 
       await new Promise<void>((resolve, reject) => {
-        audio!.onended = () => {
-          if (this.status === 'speaking') { this.setStatus('idle'); this.config.onSpeechEnd?.() }
+        const cleanup = () => {
           if (audioUrl) URL.revokeObjectURL(audioUrl)
           this.currentOpenAIAudio = null
+        }
+        
+        audio!.onended = () => {
+          if (this.status === 'speaking') { 
+            this.setStatus('idle')
+            this.config.onSpeechEnd?.() 
+          }
+          cleanup()
           resolve()
         }
-        audio!.onerror = () => {
-          if (audioUrl) URL.revokeObjectURL(audioUrl)
-          this.currentOpenAIAudio = null
-          reject(new Error('Audio playback failed'))
+        audio!.onerror = (e) => {
+          cleanup()
+          const errorMsg = audio!.error?.message || '音频播放失败'
+          reject(new Error(errorMsg))
         }
+        // 添加超时保护，避免无限等待
+        setTimeout(() => {
+          if (audio && this.status === 'speaking') {
+            cleanup()
+            reject(new Error('音频播放超时'))
+          }
+        }, 60000) // 60秒超时
       })
     } catch (error: any) {
       this.setStatus('idle')
       if (audioUrl) URL.revokeObjectURL(audioUrl)
+      if (audio) {
+        audio.pause()
+        audio.src = ''
+      }
       this.currentOpenAIAudio = null
       throw error
     }
