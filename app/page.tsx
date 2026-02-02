@@ -225,12 +225,12 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-        {/* 主内容 + 底部横条 */}
-        <div className="flex-none flex flex-col shrink-0 w-full">
+        {/* 主内容 + 底部横条（主内容块拉满剩余高度，主行内容靠底） */}
+        <div className="flex-1 flex flex-col min-h-0 w-full">
         {/* 主行：左道教 | 中标题+标语+输入 | 右佛教 */}
-        <div className="min-h-0 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 md:gap-6 w-full max-w-6xl mx-auto px-3 md:px-6 items-center py-2">
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-2 md:gap-6 w-full max-w-6xl mx-auto px-3 md:px-6 items-center py-1 md:py-2">
           {/* 左：道教人物（多列填满空白） */}
-          <div className="order-2 md:order-1 flex md:grid md:grid-cols-2 gap-3 md:pr-4 overflow-x-auto md:overflow-y-auto md:overflow-x-visible min-h-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-3 px-3 md:mx-0 md:px-0 md:content-start md:justify-items-end">
+          <div className="order-2 md:order-1 flex md:grid md:grid-cols-2 gap-2 md:gap-3 md:pr-4 overflow-x-auto md:overflow-y-auto md:overflow-x-visible min-h-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-3 px-3 md:mx-0 md:px-0 md:content-start md:justify-items-end">
             {taoistSages.map((s, i) => {
               const p = pastelCards[i % pastelCards.length]
               const isFullRow = i === 0 // 老子独占一行
@@ -291,7 +291,7 @@ export default function HomePage() {
           </section>
 
           {/* 右：佛教人物（多列填满空白） */}
-          <div className="order-3 flex md:grid md:grid-cols-2 gap-3 md:pl-4 overflow-x-auto md:overflow-y-auto md:overflow-x-visible min-h-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-3 px-3 md:mx-0 md:px-0 md:content-start md:justify-items-start">
+          <div className="order-3 flex md:grid md:grid-cols-2 gap-2 md:gap-3 md:pl-4 overflow-x-auto md:overflow-y-auto md:overflow-x-visible min-h-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-3 px-3 md:mx-0 md:px-0 md:content-start md:justify-items-start">
             {buddhistSages.map((s, i) => {
               const p = pastelCards[(i + 3) % pastelCards.length]
               const isFullRow = i === 0 // 佛陀独占一行
