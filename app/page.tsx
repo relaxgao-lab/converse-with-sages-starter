@@ -39,6 +39,18 @@ const westernSages = [
   { label: "康德", value: "康德，德国古典哲学奠基人，批判哲学", intro: "德国古典哲学奠基人，批判哲学" },
 ]
 
+// 顶部：西方科学家（横条展示）
+const topScientists = [
+  { label: "尼古拉·特斯拉", value: "尼古拉·特斯拉，发明家与物理学家，交流电与无线传输", intro: "发明家与物理学家，交流电与无线传输" },
+  { label: "爱因斯坦", value: "爱因斯坦，物理学家，相对论与光子", intro: "物理学家，相对论与光子" },
+  { label: "牛顿", value: "牛顿，物理学家，经典力学与万有引力", intro: "物理学家，经典力学与万有引力" },
+  { label: "居里夫人", value: "居里夫人，物理学家与化学家，放射性研究", intro: "物理学家与化学家，放射性研究" },
+  { label: "达尔文", value: "达尔文，生物学家，进化论", intro: "生物学家，进化论" },
+  { label: "伽利略", value: "伽利略，物理学家与天文学家，近代科学奠基人", intro: "物理学家与天文学家，近代科学奠基人" },
+  { label: "麦克斯韦", value: "麦克斯韦，物理学家，电磁学与麦克斯韦方程组", intro: "物理学家，电磁学与麦克斯韦方程组" },
+  { label: "玻尔", value: "玻尔，物理学家，量子力学与原子结构", intro: "物理学家，量子力学与原子结构" },
+]
+
 // 诸子百家等，按年代从早到晚
 const otherSages = [
   { label: "管子", value: "管子，齐相，富国强兵之道", intro: "齐相，富国强兵之道" },
@@ -57,6 +69,19 @@ const otherSages = [
 
 const bottomSages = [...westernSages, ...otherSages]
 
+// 参考 EnglishAI 的 pastel 卡片配色（每张卡片不同柔和色）
+const pastelCards = [
+  { bg: "bg-slate-100", border: "border-slate-200", ring: "focus:ring-slate-300", avatar: "bg-slate-200 text-slate-700" },
+  { bg: "bg-violet-100", border: "border-violet-200", ring: "focus:ring-violet-300", avatar: "bg-violet-200 text-violet-700" },
+  { bg: "bg-pink-100", border: "border-pink-200", ring: "focus:ring-pink-300", avatar: "bg-pink-200 text-pink-700" },
+  { bg: "bg-amber-100", border: "border-amber-200", ring: "focus:ring-amber-300", avatar: "bg-amber-200 text-amber-800" },
+  { bg: "bg-emerald-100", border: "border-emerald-200", ring: "focus:ring-emerald-300", avatar: "bg-emerald-200 text-emerald-700" },
+  { bg: "bg-sky-100", border: "border-sky-200", ring: "focus:ring-sky-300", avatar: "bg-sky-200 text-sky-700" },
+  { bg: "bg-teal-100", border: "border-teal-200", ring: "focus:ring-teal-300", avatar: "bg-teal-200 text-teal-700" },
+  { bg: "bg-orange-100", border: "border-orange-200", ring: "focus:ring-orange-300", avatar: "bg-orange-200 text-orange-700" },
+  { bg: "bg-cyan-100", border: "border-cyan-200", ring: "focus:ring-cyan-300", avatar: "bg-cyan-200 text-cyan-700" },
+]
+
 export default function HomePage() {
   const router = useRouter()
   const [scenario, setScenario] = useState("")
@@ -64,6 +89,8 @@ export default function HomePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const bottomStripRef = useRef<HTMLDivElement>(null)
   const [bottomStripPaused, setBottomStripPaused] = useState(false)
+  const topStripRef = useRef<HTMLDivElement>(null)
+  const [topStripPaused, setTopStripPaused] = useState(false)
 
   useEffect(() => {
     let touchStartY = 0
@@ -99,6 +126,21 @@ export default function HomePage() {
       return () => clearInterval(interval)
     }
   }, [bottomStripPaused])
+
+  useEffect(() => {
+    if (topStripRef.current && !topStripPaused) {
+      const el = topStripRef.current
+      const step = 1
+      const interval = setInterval(() => {
+        if (!el || topStripPaused) return
+        const segmentWidth = el.scrollWidth / 2
+        if (segmentWidth <= 0) return
+        el.scrollLeft += step
+        if (el.scrollLeft >= segmentWidth) el.scrollLeft -= segmentWidth
+      }, 30)
+      return () => clearInterval(interval)
+    }
+  }, [topStripPaused])
 
   const handleStartScenario = async (override?: string) => {
     const toUse = (override ?? scenario).trim()
@@ -142,107 +184,142 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {errorMessage && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm flex justify-between items-center">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm flex justify-between items-center shrink-0">
           {errorMessage}
           <Button variant="ghost" size="sm" onClick={() => setErrorMessage(null)}>关闭</Button>
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-h-screen bg-gradient-to-b from-stone-50/80 to-stone-100/60">
-        {/* 上方内容区域 */}
-        <div className="flex-[0.5] min-h-0 flex items-end justify-center pb-4 md:pb-6">
-          <div className="text-center px-4 max-w-2xl">
-            <p className="text-sm sm:text-base text-amber-700/80 font-medium mb-2">
-              跨越时空，与智者对话
-            </p>
-            <p className="text-xs sm:text-sm text-gray-500/80 leading-relaxed">
-              点击下方人物卡片快速开始，或输入任意智者姓名开启对话
-            </p>
+      <div className="flex-1 flex flex-col min-h-0 bg-white overflow-y-auto overflow-x-hidden">
+        {/* 顶部：西方科学家（无限向右滚动，上边距用 safe-area-inset-top） */}
+        <div className="shrink-0 w-full overflow-x-hidden pt-[max(1rem,env(safe-area-inset-top))] pb-2">
+          <div
+            ref={topStripRef}
+            onMouseEnter={() => setTopStripPaused(true)}
+            onMouseLeave={() => setTopStripPaused(false)}
+            className="overflow-x-auto overflow-y-hidden px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="flex gap-4 min-w-max justify-center py-1">
+              {[...topScientists, ...topScientists, ...topScientists, ...topScientists].map((s, i) => {
+                const p = pastelCards[i % pastelCards.length]
+                return (
+                  <button
+                    key={`top-${s.label}-${i}`}
+                    type="button"
+                    onClick={() => handleStartScenario(s.value)}
+                    disabled={isLoading}
+                    className={`flex flex-col gap-1.5 shrink-0 w-32 rounded-xl ${p.bg} border ${p.border} hover:shadow-md focus:outline-none focus:ring-2 ${p.ring} focus:ring-offset-2 disabled:opacity-60 transition-all py-3 px-3 text-center touch-manipulation`}
+                    aria-label={`与${s.label}对话`}
+                  >
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-base font-medium shrink-0 mx-auto ${p.avatar}`}>
+                      {s.label.slice(0, 1)}
+                    </div>
+                    <span className="text-xs font-bold text-gray-800 leading-tight">{s.label}</span>
+                    <span className="text-[11px] text-gray-600 leading-tight line-clamp-2">{s.intro}</span>
+                    <span className="text-[11px] font-medium text-blue-600 mt-auto">开始对话 →</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
-
-        {/* 主行：左道教 | 中标题+输入 | 右佛教 */}
-        <div className="shrink-0 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 md:gap-20 w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-8 items-start">
-          {/* 左：道教人物（小屏横向滚动） */}
-          <div className="order-2 md:order-1 flex md:flex-col items-stretch md:items-end gap-3 md:pr-6 overflow-x-auto md:overflow-visible pb-2 md:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-3 px-3 sm:mx-0 sm:px-0">
-            {taoistSages.map((s) => (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => handleStartScenario(s.value)}
-                disabled={isLoading}
-                className="flex items-center gap-3 shrink-0 w-[200px] md:w-[200px] rounded-2xl bg-gradient-to-br from-white to-amber-50/40 shadow-lg shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-900/10 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 disabled:opacity-60 transition-all py-2.5 px-3 text-left border border-amber-100/60 hover:border-amber-200/80 min-h-[44px] touch-manipulation"
-                aria-label={`与${s.label}对话`}
-              >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-200 to-orange-200 flex items-center justify-center text-base font-medium text-amber-900 shrink-0 shadow-inner">
-                  {s.label.slice(0, 1)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-gray-800">{s.label}</span>
-                  <span className="block text-[11px] text-gray-500 truncate">{s.intro}</span>
-                </div>
-              </button>
-            ))}
+        {/* 主内容 + 底部横条 */}
+        <div className="flex-none flex flex-col shrink-0 w-full">
+        {/* 主行：左道教 | 中标题+标语+输入 | 右佛教 */}
+        <div className="min-h-0 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 md:gap-6 w-full max-w-6xl mx-auto px-3 md:px-6 items-center py-2">
+          {/* 左：道教人物（多列填满空白） */}
+          <div className="order-2 md:order-1 flex md:grid md:grid-cols-2 gap-3 md:pr-4 overflow-x-auto md:overflow-y-auto md:overflow-x-visible min-h-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-3 px-3 md:mx-0 md:px-0 md:content-start md:justify-items-end">
+            {taoistSages.map((s, i) => {
+              const p = pastelCards[i % pastelCards.length]
+              const isFullRow = i === 0 // 老子独占一行
+              return (
+                <button
+                  key={s.label}
+                  type="button"
+                  onClick={() => handleStartScenario(s.value)}
+                  disabled={isLoading}
+                  className={`flex flex-col gap-1.5 shrink-0 w-[200px] md:w-full md:min-w-0 rounded-2xl ${p.bg} border ${p.border} hover:shadow-md focus:outline-none focus:ring-2 ${p.ring} focus:ring-offset-1 disabled:opacity-60 transition-all py-3 px-3 text-left touch-manipulation ${isFullRow ? "md:col-span-2" : ""}`}
+                  aria-label={`与${s.label}对话`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-medium shrink-0 ${p.avatar}`}>
+                      {s.label.slice(0, 1)}
+                    </div>
+                    <span className="text-sm font-bold text-gray-800 truncate">{s.label}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-tight line-clamp-1">{s.intro}</p>
+                  <span className="text-xs font-medium text-blue-600">开始对话 →</span>
+                </button>
+              )
+            })}
           </div>
 
-          {/* 中：标题 + 输入区 */}
-          <section className="order-1 md:order-2 shrink-0 flex flex-col items-center text-center px-2 sm:px-4 md:px-8 py-2">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 tracking-tight">Converse with Sages</h1>
-            <p className="text-muted-foreground text-xs sm:text-sm md:text-base mb-4 sm:mb-5">与古今中外智者对话</p>
-            <div className="w-full max-w-sm flex flex-col gap-3">
-              <div className="flex flex-col sm:flex-row gap-2 w-full">
+          {/* 中：标语 + 标题 + 副标题 + 输入区（一组，紧凑层级） */}
+          <section className="order-1 md:order-2 shrink-0 flex flex-col items-center text-center px-2 md:px-4">
+            {/* 上方标语：两行紧贴 */}
+            <div className="flex flex-col gap-0.5 mb-1.5">
+              <p className="text-sm text-gray-700 font-medium">跨越时空，与智者对话</p>
+              <p className="text-xs text-gray-500">点击卡片或输入智者姓名开始</p>
+            </div>
+            {/* 主标题 + 副标题：紧贴 */}
+            <div className="flex flex-col gap-0.5 mb-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Converse with Sages</h1>
+              <p className="text-gray-500 text-xs">与古今中外智者对话</p>
+            </div>
+            <div className="w-full max-w-xs flex flex-col gap-1.5">
+              <div className="flex flex-col sm:flex-row gap-1.5 w-full">
                 <Input
                   value={scenario}
                   onChange={(e) => setScenario(e.target.value)}
-                  placeholder="如：佛陀、老子、孔子、苏格拉底..."
+                  placeholder="如：佛陀、老子、孔子..."
                   onKeyDown={(e) => e.key === "Enter" && handleStartScenario()}
                   disabled={isLoading}
-                  className="rounded-xl border-stone-200 bg-white shadow-sm"
+                  className="rounded-lg border-gray-200 bg-white text-sm h-9 focus-visible:ring-blue-500"
                 />
                 <Button
                   onClick={() => handleStartScenario()}
                   disabled={isLoading || !scenario.trim()}
-                  className="rounded-xl shrink-0 px-5"
+                  className="rounded-lg shrink-0 px-4 h-9 text-sm bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   {isLoading ? "..." : "开始"}
                 </Button>
               </div>
-              {isLoading && (
-                <p className="text-muted-foreground text-xs">生成场景中...</p>
-              )}
+              {isLoading && <p className="text-gray-500 text-[10px]">生成场景中...</p>}
             </div>
           </section>
 
-          {/* 右：佛教人物（小屏横向滚动） */}
-          <div className="order-3 flex md:flex-col items-stretch md:items-start gap-3 md:pl-6 overflow-x-auto md:overflow-visible pb-2 md:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-3 px-3 sm:mx-0 sm:px-0">
-            {buddhistSages.map((s) => (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => handleStartScenario(s.value)}
-                disabled={isLoading}
-                className="flex items-center gap-3 shrink-0 w-[200px] md:w-[200px] rounded-2xl bg-gradient-to-br from-white to-amber-50/40 shadow-lg shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-900/10 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 disabled:opacity-60 transition-all py-2.5 px-3 text-left border border-amber-100/60 hover:border-amber-200/80 min-h-[44px] touch-manipulation"
-                aria-label={`与${s.label}对话`}
-              >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-200 to-orange-200 flex items-center justify-center text-base font-medium text-amber-900 shrink-0 shadow-inner">
-                  {s.label.slice(0, 1)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-gray-800">{s.label}</span>
-                  <span className="block text-[11px] text-gray-500 truncate">{s.intro}</span>
-                </div>
-              </button>
-            ))}
+          {/* 右：佛教人物（多列填满空白） */}
+          <div className="order-3 flex md:grid md:grid-cols-2 gap-3 md:pl-4 overflow-x-auto md:overflow-y-auto md:overflow-x-visible min-h-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-3 px-3 md:mx-0 md:px-0 md:content-start md:justify-items-start">
+            {buddhistSages.map((s, i) => {
+              const p = pastelCards[(i + 3) % pastelCards.length]
+              const isFullRow = i === 0 // 佛陀独占一行
+              return (
+                <button
+                  key={s.label}
+                  type="button"
+                  onClick={() => handleStartScenario(s.value)}
+                  disabled={isLoading}
+                  className={`flex flex-col gap-1.5 shrink-0 w-[200px] md:w-full md:min-w-0 rounded-2xl ${p.bg} border ${p.border} hover:shadow-md focus:outline-none focus:ring-2 ${p.ring} focus:ring-offset-1 disabled:opacity-60 transition-all py-3 px-3 text-left touch-manipulation ${isFullRow ? "md:col-span-2" : ""}`}
+                  aria-label={`与${s.label}对话`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-medium shrink-0 ${p.avatar}`}>
+                      {s.label.slice(0, 1)}
+                    </div>
+                    <span className="text-sm font-bold text-gray-800 truncate">{s.label}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-tight line-clamp-1">{s.intro}</p>
+                  <span className="text-xs font-medium text-blue-600">开始对话 →</span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
-        {/* 下方弹性占位（较小，避免底部内容过低） */}
-        <div className="flex-[0.2] min-h-0" aria-hidden />
-
-        {/* 底部：西方圣人 + 诸子百家等横向滚动（自动滚动、无滚动条） */}
-        <div className="shrink-0 w-full py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {/* 底部：西方圣人 + 诸子百家（pastel 卡片风格） */}
+        <div className="shrink-0 w-full pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div
             ref={bottomStripRef}
             onMouseEnter={() => setBottomStripPaused(true)}
@@ -250,24 +327,29 @@ export default function HomePage() {
             className="overflow-x-auto overflow-y-hidden px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             <div className="flex gap-4 min-w-max justify-center py-1">
-              {[...bottomSages, ...bottomSages].map((s, i) => (
-                <button
-                  key={`${s.label}-${i}`}
-                  type="button"
-                  onClick={() => handleStartScenario(s.value)}
-                  disabled={isLoading}
-                  className="flex flex-col items-center gap-1.5 shrink-0 w-32 rounded-2xl bg-gradient-to-br from-white to-amber-50/40 shadow-lg shadow-amber-900/5 hover:shadow-xl hover:shadow-amber-900/10 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 disabled:opacity-60 transition-all py-3 px-2 border border-amber-100/60 hover:border-amber-200/80 min-h-[44px] touch-manipulation"
-                  aria-label={`与${s.label}对话`}
-                >
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-200 to-orange-200 flex items-center justify-center text-base font-medium text-amber-900 shadow-inner">
-                    {s.label.slice(0, 1)}
-                  </div>
-                  <span className="text-xs font-medium text-gray-800 leading-tight">{s.label}</span>
-                  <span className="text-[11px] text-gray-500 leading-tight text-center line-clamp-2">{s.intro}</span>
-                </button>
-              ))}
+              {[...bottomSages, ...bottomSages].map((s, i) => {
+                const p = pastelCards[i % pastelCards.length]
+                return (
+                  <button
+                    key={`${s.label}-${i}`}
+                    type="button"
+                    onClick={() => handleStartScenario(s.value)}
+                    disabled={isLoading}
+                    className={`flex flex-col gap-1.5 shrink-0 w-32 rounded-xl ${p.bg} border ${p.border} hover:shadow-md focus:outline-none focus:ring-2 ${p.ring} focus:ring-offset-2 disabled:opacity-60 transition-all py-3 px-3 text-center touch-manipulation`}
+                    aria-label={`与${s.label}对话`}
+                  >
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-base font-medium shrink-0 mx-auto ${p.avatar}`}>
+                      {s.label.slice(0, 1)}
+                    </div>
+                    <span className="text-xs font-bold text-gray-800 leading-tight">{s.label}</span>
+                    <span className="text-[11px] text-gray-600 leading-tight line-clamp-2">{s.intro}</span>
+                    <span className="text-[11px] font-medium text-blue-600 mt-auto">开始对话 →</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>

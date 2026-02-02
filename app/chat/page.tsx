@@ -56,7 +56,10 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const transcriptCallback = useRef<((text: string) => void) | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const isSpeechEnabledRef = useRef(isSpeechEnabled)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  isSpeechEnabledRef.current = isSpeechEnabled
 
   // 如果没有 sceneMeta，重定向到首页
   useEffect(() => {
@@ -140,8 +143,14 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, aiMsg])
       setIsLoading(false)
 
+      // 仅 PC 端自动播放回复语音，手机端跳过（避免移动端策略导致无法播放）
+      const isMobile = typeof navigator !== "undefined" && (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        ("ontouchstart" in window) ||
+        (navigator.maxTouchPoints > 0)
+      )
       const speakMatch = data.content?.match(/\[SPEAK\]([\s\S]*?)\[\/SPEAK\]/)
-      if (isSpeechEnabled && speakMatch?.[1]) {
+      if (!isMobile && isSpeechEnabledRef.current && speakMatch?.[1]) {
         try {
           await whisperSpeechService.speak(speakMatch[1].trim())
         } catch (speakErr: any) {
@@ -189,8 +198,14 @@ export default function ChatPage() {
       .then((data) => {
         const aiMsg: Message = { role: "assistant", content: data.content || "(No response)" }
         setMessages([aiMsg])
+        // 仅 PC 端自动播放，手机端跳过
+        const isMobile = typeof navigator !== "undefined" && (
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+          ("ontouchstart" in window) ||
+          (navigator.maxTouchPoints > 0)
+        )
         const speakMatch = data.content?.match(/\[SPEAK\]([\s\S]*?)\[\/SPEAK\]/)
-        if (isSpeechEnabled && speakMatch?.[1]) {
+        if (!isMobile && isSpeechEnabledRef.current && speakMatch?.[1]) {
           whisperSpeechService.speak(speakMatch[1].trim())
         }
       })
@@ -259,7 +274,7 @@ export default function ChatPage() {
           </div>
         </div>
       ) : (
-        <div className="flex h-screen bg-[#f9f9f9]">
+        <div className="flex h-screen bg-stone-50/60">
           {/* 移动端侧栏遮罩 */}
           {sidebarOpen && (
             <div
@@ -311,31 +326,31 @@ export default function ChatPage() {
                   );
                 })()}
               </div>
-            </div>
-            <div className="p-3 space-y-1 border-t border-white/10">
-              <button
-                type="button"
-                onClick={() => { handleBack(); setSidebarOpen(false) }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-400 hover:bg-white/10 hover:text-gray-200 min-h-[44px] touch-manipulation"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                选古人
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsSpeechEnabled(!isSpeechEnabled)}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-400 hover:bg-white/10 hover:text-gray-200 min-h-[44px] touch-manipulation"
-                title={isSpeechEnabled ? "关闭语音" : "开启语音"}
-              >
-                {isSpeechEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                {isSpeechEnabled ? "语音开" : "语音关"}
-              </button>
+              <div className="mt-3 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => { handleBack(); setSidebarOpen(false) }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-400 hover:bg-white/10 hover:text-gray-200 min-h-[44px] touch-manipulation"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  选古人
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSpeechEnabled(!isSpeechEnabled)}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-400 hover:bg-white/10 hover:text-gray-200 min-h-[44px] touch-manipulation"
+                  title={isSpeechEnabled ? "关闭语音" : "开启语音"}
+                >
+                  {isSpeechEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                  {isSpeechEnabled ? "语音开" : "语音关"}
+                </button>
+              </div>
             </div>
           </aside>
 
           <main className="flex-1 flex flex-col min-w-0 bg-white min-h-0">
             {/* 移动端顶部栏 */}
-            <div className="sticky top-0 z-10 flex md:hidden items-center gap-2 shrink-0 px-3 py-2 border-b border-gray-200 bg-white min-h-[44px] shadow-sm">
+            <div className="sticky top-0 z-10 flex md:hidden items-center gap-2 shrink-0 px-3 py-2 border-b border-stone-200 bg-white/95 min-h-[44px] shadow-sm backdrop-blur-sm">
               <button
                 type="button"
                 onClick={() => setSidebarOpen(true)}
@@ -380,7 +395,7 @@ export default function ChatPage() {
                       }`}
                     >
                       {msg.role === "user" ? (
-                        <div className="inline-block max-w-[85%] rounded-2xl bg-[#f4f4f4] px-4 py-3 text-gray-900 text-left">
+                        <div className="inline-block max-w-[85%] rounded-2xl bg-violet-50 border border-violet-100 px-4 py-3 text-gray-900 text-left">
                           {msg.content}
                         </div>
                       ) : (
@@ -391,12 +406,12 @@ export default function ChatPage() {
                           {i === messages.length - 1 && (
                             <div className="min-h-[28px] flex items-center pt-1">
                               {speechStatus === "speaking" ? (
-                                <div className="flex items-center gap-2 text-[13px] text-amber-600">
+                                <div className="flex items-center gap-2 text-[13px] text-emerald-600">
                                   <span className="flex items-end gap-0.5 h-4 [&>span]:inline-block">
-                                    <span className="w-1 bg-amber-500 rounded-full origin-bottom animate-sound-wave animate-sound-wave-1 h-3" />
-                                    <span className="w-1 bg-amber-500 rounded-full origin-bottom animate-sound-wave animate-sound-wave-2 h-4" />
-                                    <span className="w-1 bg-amber-500 rounded-full origin-bottom animate-sound-wave animate-sound-wave-3 h-3" />
-                                    <span className="w-1 bg-amber-500 rounded-full origin-bottom animate-sound-wave animate-sound-wave-4 h-4" />
+                                    <span className="w-1 bg-emerald-500 rounded-full origin-bottom animate-sound-wave animate-sound-wave-1 h-3" />
+                                    <span className="w-1 bg-emerald-500 rounded-full origin-bottom animate-sound-wave animate-sound-wave-2 h-4" />
+                                    <span className="w-1 bg-emerald-500 rounded-full origin-bottom animate-sound-wave animate-sound-wave-3 h-3" />
+                                    <span className="w-1 bg-emerald-500 rounded-full origin-bottom animate-sound-wave animate-sound-wave-4 h-4" />
                                   </span>
                                   <Volume2 className="h-3.5 w-3.5 shrink-0 animate-status-pulse" />
                                   正在播放
@@ -415,7 +430,7 @@ export default function ChatPage() {
                       师
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="inline-block rounded-2xl bg-gray-50/80 border border-gray-100 px-4 py-3 text-[15px] text-gray-500 italic">
+                      <div className="inline-block rounded-2xl bg-emerald-50/90 border border-emerald-100 px-4 py-3 text-[15px] text-emerald-700/80 italic">
                         等待圣人回复
                         <span className="inline-flex">
                           <span className="animate-dot-flash-1">.</span>
@@ -430,36 +445,30 @@ export default function ChatPage() {
               </div>
             </div>
 
-            <div className="sticky bottom-0 w-full border-t border-gray-200 bg-white p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-10 shadow-[0_-2px_8px_rgba(0,0,0,0.05)]">
+            <div className="sticky bottom-0 w-full border-t border-stone-200 bg-white/95 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-10 shadow-[0_-2px_8px_rgba(0,0,0,0.05)] backdrop-blur-sm">
               <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-                <div className="flex items-end gap-1 rounded-2xl bg-white border border-gray-300 shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_2px_4px_rgba(0,0,0,0.05)] p-2 focus-within:border-gray-400 focus-within:shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.08)] transition-all">
+                <div className="flex items-end gap-1 rounded-2xl bg-white border border-stone-200 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.04)] p-2 focus-within:border-emerald-300 focus-within:shadow-[0_0_0_1px_rgba(5,150,105,0.15),0_2px_6px_rgba(0,0,0,0.06)] transition-all">
                   <Textarea
                     ref={textareaRef}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyDown={(e) => {
+                      if (e.key !== 'Enter') return
+                      // Shift+Enter：换行
+                      if (e.shiftKey) return
+                      // 移动端：Enter 仅换行，不发送
                       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                                       ('ontouchstart' in window) ||
-                                       (navigator.maxTouchPoints > 0)
-
-                      if (e.key === 'Enter') {
-                        // Shift+Enter: 换行（PC 和移动端都支持）
-                        if (e.shiftKey) {
-                          return // 不阻止默认，允许换行
-                        }
-                        // Enter（无 Shift）
-                        if (isMobile) {
-                          // 移动端：不阻止默认，允许键盘换行
-                          return
-                        }
-                        // PC 端：阻止默认并发送
-                        e.preventDefault()
-                        if (inputText.trim() && !isLoading && speechStatus !== "recording" && speechStatus !== "processing") {
-                          handleSubmit(e)
-                        }
+                        ('ontouchstart' in window) ||
+                        (navigator.maxTouchPoints > 0)
+                      if (isMobile) return
+                      // PC：打字过程里 Enter 为 IME 确认键，不发送；输入完成后 Enter 发送
+                      if ((e.nativeEvent as KeyboardEvent).isComposing) return
+                      e.preventDefault()
+                      if (inputText.trim() && !isLoading && speechStatus !== 'recording' && speechStatus !== 'processing') {
+                        handleSubmit(e)
                       }
                     }}
-                    placeholder="输入或语音..."
+                    placeholder="输入或语音...（Shift+Enter 换行）"
                     disabled={isLoading || speechStatus === "recording" || speechStatus === "processing"}
                     className="flex-1 border-0 min-h-[44px] sm:min-h-[52px] max-h-[120px] py-3 px-4 text-base sm:text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500 resize-none overflow-hidden"
                     rows={1}
@@ -478,7 +487,7 @@ export default function ChatPage() {
                     type="submit"
                     size="icon"
                     disabled={!inputText.trim() || isLoading}
-                    className="shrink-0 h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-[#19c37d] hover:bg-[#18a86d] text-white disabled:opacity-50 touch-manipulation"
+                    className="shrink-0 h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 touch-manipulation"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
