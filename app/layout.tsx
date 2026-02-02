@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Converse with Sages - 与先贤对话',
-  description: '与佛陀、耶稣、诸子百家等古今中外智者对话，AI 驱动的跨文化先贤对话',
+  title: 'Converse with Sages - 与神对话',
+  description: '与佛陀、老子、庄子、诸子百家等古今中外智者对话，AI 驱动的跨文化先贤对话',
 }
 
 export const viewport: Viewport = {
