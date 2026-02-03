@@ -57,6 +57,8 @@ export default function ChatPage() {
   const transcriptCallback = useRef<((text: string) => void) | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isSpeechEnabledRef = useRef(isSpeechEnabled)
+  const isInitialMountRef = useRef(true)
+  const prevMessagesLengthRef = useRef(initialState.messages.length)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   isSpeechEnabledRef.current = isSpeechEnabled
@@ -67,6 +69,25 @@ export default function ChatPage() {
       router.push('/')
     }
   }, [sceneMeta, router])
+
+  // 页面加载时强制滚动到顶部，防止自动滚动到底部
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // 立即滚动到顶部
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+      
+      // 延迟再次确保（防止其他脚本触发滚动）
+      const timer = setTimeout(() => {
+        window.scrollTo(0, 0)
+        document.documentElement.scrollTop = 0
+        document.body.scrollTop = 0
+      }, 100)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [])
 
   useEffect(() => {
     whisperSpeechService.updateConfig({
@@ -86,16 +107,36 @@ export default function ChatPage() {
     return () => whisperSpeechService.resetConfig?.()
   }, [])
 
+  // 只在有新消息时滚动到底部，初次加载和第一条消息时不滚动
   useEffect(() => {
-    if (messages.length > 0 && messagesEndRef.current) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
-      }, 100)
+    const currentLength = messages.length
+    
+    // 跳过初次加载时的滚动（包括从 localStorage 恢复的消息）
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false
+      prevMessagesLengthRef.current = currentLength
+      return
     }
-  }, [])
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    
+    const prevLength = prevMessagesLengthRef.current
+    
+    // 只在消息数量增加且大于1时滚动（第一条消息不滚动，后续消息才滚动）
+    if (currentLength === 0 || currentLength <= prevLength || currentLength <= 1) {
+      prevMessagesLengthRef.current = currentLength
+      return
+    }
+    
+    // 更新上一次的消息数量
+    prevMessagesLengthRef.current = currentLength
+    
+    // 延迟滚动，确保 DOM 已更新
+    const timer = setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+      }
+    }, 100)
+    
+    return () => clearTimeout(timer)
   }, [messages])
 
   // 自动调整 textarea 高度
@@ -344,7 +385,7 @@ export default function ChatPage() {
 
           <main className="flex-1 flex flex-col min-w-0 bg-white min-h-0">
             {/* 移动端顶部栏 */}
-            <div className="sticky top-0 z-10 flex md:hidden items-center gap-2 shrink-0 px-3 py-2 border-b border-stone-200 bg-white/95 min-h-[44px] shadow-sm backdrop-blur-sm">
+            <div className="sticky top-0 font-bold  z-10 flex md:hidden items-center gap-2 shrink-0 px-3 py-2 border-b border-stone-200 bg-white/95 min-h-[44px] shadow-sm backdrop-blur-sm">
               <button
                 type="button"
                 onClick={() => setSidebarOpen(true)}
@@ -361,7 +402,7 @@ export default function ChatPage() {
                 <ArrowLeft className="h-4 w-4" />
                 选古人
               </button>
-              <span className="flex-1 truncate text-sm text-gray-700 ml-1" title={sceneMeta.scenario}>
+              <span className="flex-1 truncate text-base font-bold text-gray-700 ml-1" title={sceneMeta.scenario}>
                 {sceneMeta.scenario}
               </span>
             </div>
