@@ -257,12 +257,12 @@ export default function HomePage() {
           <section className="order-1 md:order-2 shrink-0 flex flex-col items-center text-center px-3 md:px-4 mb-3 md:mb-0">
             {/* 上方标语：两行紧贴 */}
             <div className="flex flex-col gap-1 mb-3 md:mb-4">
-              <p className="text-3xl md:text-sm text-gray-500 font-medium tracking-wide uppercase">跨越时空，与智者对话</p>
-              <p className="text-base md:text-xs text-gray-400 leading-relaxed">点击卡片或输入智者姓名开始</p>
+              <p className="text-3xl md:text-5xl text-gray-500 font-medium tracking-wide uppercase">跨越时空，与智者对话</p>
+              <p className="text-base md:text-base text-gray-400 leading-relaxed">点击卡片或输入智者姓名开始</p>
             </div>
             {/* 主标题：有设计感的层次 */}
             <div className="flex flex-col gap-2 md:gap-2.5 mb-4 md:mb-5">
-              <h1 className="text-xl  md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-none">
+              <h1 className="text-xl  md:text-2xl lg:text-2xl font-extrabold tracking-tight leading-none">
                 <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
                   Converse
                 </span>
