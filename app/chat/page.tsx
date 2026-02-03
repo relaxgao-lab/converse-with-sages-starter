@@ -257,8 +257,23 @@ export default function ChatPage() {
   }
 
   const extractSpeakContent = (content: string) => {
-    const m = content.match(/\[SPEAK\]([\s\S]*?)\[\/SPEAK\]/)
-    return m ? m[1].trim() : content
+    if (!content) return content
+    
+    // 先移除所有 [SPEAK]...[/SPEAK] 标签（包括格式错误的）
+    let cleaned = content.replace(/\[SPEAK\][\s\S]*?\[\/SPEAK\]/gi, '')
+    
+    // 如果移除标签后内容为空，尝试提取标签内的内容
+    if (!cleaned.trim()) {
+      const m = content.match(/\[SPEAK\]([\s\S]*?)\[\/SPEAK\]/i)
+      if (m && m[1]) {
+        cleaned = m[1].trim()
+      }
+    }
+    
+    // 再次清理，确保没有残留的标签
+    cleaned = cleaned.replace(/\[SPEAK\][\s\S]*?\[\/SPEAK\]/gi, '').trim()
+    
+    return cleaned || content
   }
 
   if (!sceneMeta) {
