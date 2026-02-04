@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import OlarkChat from '@/components/ui/OlarkChat'
 
 interface SceneMeta {
   aiRole: string
@@ -142,7 +143,7 @@ export default function HomePage() {
   const handleStartScenario = async (override?: string) => {
     const toUse = (override ?? scenario).trim()
     if (!toUse) return
-    setScenario(toUse)
+    // 点击卡片时不更新输入框，只使用传入的值
     setIsLoading(true)
     setErrorMessage(null)
     try {
@@ -180,8 +181,23 @@ export default function HomePage() {
     }
   }
 
+  // 离开首页时隐藏 OlarkChat
+  useEffect(() => {
+    return () => {
+      // 组件卸载时隐藏 Olark 聊天框
+      if (typeof window !== 'undefined' && (window as any).olark) {
+        try {
+          (window as any).olark('api.box.hide')
+        } catch (e) {
+          console.warn('Failed to hide Olark:', e)
+        }
+      }
+    }
+  }, [])
+
   return (
     <div className="h-screen flex flex-col overflow-hidden">
+      <OlarkChat/>
       {errorMessage && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm flex justify-between items-center shrink-0">
           {errorMessage}
@@ -278,7 +294,7 @@ export default function HomePage() {
               </div>
             </div>
             {/* 输入区 */}
-            <div className="w-full max-w-xs flex flex-col gap-2 md:gap-2.5">
+            <div className="w-full max-w-xs flex flex-col gap-2 md:gap-2.5 relative">
               <div className="flex flex-col sm:flex-row gap-2 w-full">
                 <Input
                   value={scenario}
@@ -296,11 +312,19 @@ export default function HomePage() {
                   disabled={isLoading || !scenario.trim()}
                   className="rounded-lg shrink-0 px-5 md:px-6 h-10 md:h-11 text-sm md:text-base font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                 >
-                  {isLoading ? "..." : "开始"}
+                  开始
                 </Button>
               </div>
+              {/* 悬浮提示 */}
               {isLoading && (
-                <p className="text-[11px] md:text-xs text-gray-500 text-center animate-pulse">生成场景中...</p>
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-50 transition-all duration-200 ease-in-out animate-[fadeIn_0.2s_ease-in-out_forwards,slideUp_0.2s_ease-in-out_forwards]">
+                  <div className="bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                    <span>生成场景中...</span>
+                  </div>
+                  {/* 小三角箭头 */}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                </div>
               )}
             </div>
           </section>

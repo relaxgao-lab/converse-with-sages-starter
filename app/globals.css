@@ -85,6 +85,16 @@
   50% { transform: scaleY(1); opacity: 1; }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translate(-50%, 4px); }
+  to { transform: translate(-50%, 0); }
+}
+
 .animate-status-pulse {
   animation: status-pulse 1.8s ease-in-out infinite;
 }

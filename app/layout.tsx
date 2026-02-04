@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-
 const siteUrl = 'https://sages.relaxgao.com'
 
 export const metadata: Metadata = {
