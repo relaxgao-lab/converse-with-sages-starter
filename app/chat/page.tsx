@@ -143,7 +143,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`
     }
   }, [inputText])
 
@@ -495,52 +495,57 @@ export default function ChatPage() {
               </div>
             </div>
 
-            <div className="sticky bottom-0 w-full border-t border-stone-200 bg-white/95 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-10 shadow-[0_-2px_8px_rgba(0,0,0,0.05)] backdrop-blur-sm">
+            <div className="sticky bottom-0 w-full bg-white/95 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-10 backdrop-blur-sm">
               <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-                <div className="flex items-end gap-1 rounded-2xl bg-white border border-stone-200 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.04)] p-2 focus-within:border-emerald-300 focus-within:shadow-[0_0_0_1px_rgba(5,150,105,0.15),0_2px_6px_rgba(0,0,0,0.06)] transition-all">
-                  <Textarea
-                    ref={textareaRef}
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key !== 'Enter') return
-                      // Shift+Enter：换行
-                      if (e.shiftKey) return
-                      // 移动端：Enter 仅换行，不发送
-                      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                        ('ontouchstart' in window) ||
-                        (navigator.maxTouchPoints > 0)
-                      if (isMobile) return
-                      // PC：打字过程里 Enter 为 IME 确认键，不发送；输入完成后 Enter 发送
-                      if ((e.nativeEvent as KeyboardEvent).isComposing) return
-                      e.preventDefault()
-                      if (inputText.trim() && !isLoading && speechStatus !== 'recording' && speechStatus !== 'processing') {
-                        handleSubmit(e)
-                      }
-                    }}
-                    placeholder="输入或语音...（Shift+Enter 换行）"
-                    disabled={isLoading || speechStatus === "recording" || speechStatus === "processing"}
-                    className="flex-1 border-0 min-h-[44px] sm:min-h-[52px] max-h-[120px] py-3 px-4 text-base sm:text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500 resize-none overflow-hidden"
-                    rows={1}
-                  />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    onClick={handleVoiceToggle}
-                    disabled={isLoading || speechStatus === "processing"}
-                    className="shrink-0 h-10 w-10 sm:h-9 sm:w-9 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 touch-manipulation"
-                  >
-                    {speechStatus === "recording" ? <StopCircle className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5" />}
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="icon"
-                    disabled={!inputText.trim() || isLoading}
-                    className="shrink-0 h-10 w-10 sm:h-9 sm:w-9 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 touch-manipulation"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
+                <div className="relative group flex flex-col rounded-[24px] bg-white border-2 border-[#10a37f] shadow-[0_0_20px_rgba(0,0,0,0.05)] p-2 transition-all">
+                  <div className="flex-1 w-full">
+                    <Textarea
+                      ref={textareaRef}
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'Enter') return
+                        if (e.shiftKey) return
+                        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                          ('ontouchstart' in window) ||
+                          (navigator.maxTouchPoints > 0)
+                        if (isMobile) return
+                        if ((e.nativeEvent as KeyboardEvent).isComposing) return
+                        e.preventDefault()
+                        if (inputText.trim() && !isLoading && speechStatus !== 'recording' && speechStatus !== 'processing') {
+                          handleSubmit(e)
+                        }
+                      }}
+                      placeholder="输入或语音...（Shift+Enter 换行）"
+                      disabled={isLoading || speechStatus === "recording" || speechStatus === "processing"}
+                      className="w-full border-0 min-h-[44px] max-h-[200px] py-3 pl-5 pr-4 text-lg sm:text-[17px] focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 resize-none overflow-y-auto scrollbar-none bg-transparent leading-relaxed block"
+                      rows={1}
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-2 px-2 pb-1 mt-auto">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleVoiceToggle}
+                      disabled={isLoading || speechStatus === "processing"}
+                      className="shrink-0 h-10 w-10 rounded-full text-gray-500 hover:bg-gray-100 hover:text-[#10a37f] transition-colors touch-manipulation"
+                    >
+                      {speechStatus === "recording" ? <StopCircle className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5" />}
+                    </Button>
+                    <Button
+                      type="submit"
+                      size="icon"
+                      disabled={!inputText.trim() || isLoading}
+                      className={`shrink-0 h-10 w-10 rounded-full transition-all duration-200 ${
+                        inputText.trim() && !isLoading 
+                          ? "bg-[#10a37f] hover:bg-[#0e8c6d] text-white shadow-md scale-105" 
+                          : "bg-gray-100 text-gray-400"
+                      } touch-manipulation`}
+                    >
+                      <Send className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
               </form>
             </div>
